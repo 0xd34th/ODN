@@ -4,7 +4,6 @@ module mecha::mecha {
     use sui::package;
     use mecha::traits::{Trait, get_data};
 
-    /// On-chain Mecha image layout
     public struct Image has store {
         helmet_1: String,
         helmet_2: String,
@@ -22,7 +21,6 @@ module mecha::mecha {
         wings_6: String,
     }
 
-    /// The Mecha NFT object
     public struct Mecha has key, store {
         id: UID,
         name: String,
@@ -31,10 +29,8 @@ module mecha::mecha {
         image: Image,
     }
 
-    /// Package initialization witness
     public struct MECHA has drop {}
 
-    /// Setup display metadata
     fun init(witness: MECHA, ctx: &mut TxContext) {
         let keys = vector[
             utf8(b"name"),
@@ -59,7 +55,6 @@ module mecha::mecha {
         transfer::public_transfer(disp, tx_context::sender(ctx));
     }
 
-    /// Mint a Mecha NFT using all traits (no string concatenation)
     #[allow(lint(self_transfer))]
     public fun mint(
         name: String,
@@ -111,7 +106,7 @@ module mecha::mecha {
 
     const E_INVALID_PART: u64 = 100;
 
-    /// Replace a composite trait part in a Mecha NFT
+    /// Dynamic
     public fun replace_part(
         mecha: &mut Mecha,
         part: u8,
