@@ -18,8 +18,6 @@ module mecha::traits {
         };
         transfer::transfer(trait, tx_context::sender(ctx));
     }
-
-    /// Return the base64 string directly (cheap copy thanks to `has copy`)
     public fun get_data(t: &Trait): String {
         t.data
     }
