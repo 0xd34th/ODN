@@ -2,7 +2,6 @@ module mecha::traits {
     use std::string::{Self, String};
     use sui::object::{Self, UID};
 
-    /// A single base64 image fragment
     public struct Trait has key, store {
         id: UID,
         data: String,
@@ -16,7 +15,7 @@ module mecha::traits {
         };
         transfer::transfer(trait, tx_context::sender(ctx));
     }
-    public fun get_data(t: &Trait): String {
-        t.data
+    public fun get_data(t: &Trait): &String {
+        &t.data
     }
 }
