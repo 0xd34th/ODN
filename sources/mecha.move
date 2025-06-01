@@ -1,24 +1,26 @@
 module mecha::mecha {
-    use std::string::{Self, String, utf8};
-    use sui::display::{new_with_fields, update_version};
-    use sui::package;
-    use mecha::traits::{Trait, get_data};
+    /* ─────────── Imports ────────────────────────────────────────────────── */
+    use std::string::{String, utf8};
+    use std::vector;
 
+    use sui::object::{UID, new};                      // UID type + new()
+    use sui::display::{new_with_fields, update_version};
+    use sui::transfer;
+    use sui::tx_context;
+    use sui::package;
+
+    use mecha::traits::{
+        Helmet, Stomach, Body, Wings,
+        get_helmet_parts, get_stomach_parts, get_body_parts, get_wings_parts
+    };
+
+    /* ─────────── Data structs ───────────────────────────────────────────── */
     public struct Image has store {
-        helmet_1: String,
-        helmet_2: String,
-        stomach_1: String,
-        stomach_2: String,
-        body_1: String,
-        body_2: String,
-        body_3: String,
-        body_4: String,
-        wings_1: String,
-        wings_2: String,
-        wings_3: String,
-        wings_4: String,
-        wings_5: String,
-        wings_6: String,
+        helmet_1: String, helmet_2: String,
+        stomach_1: String, stomach_2: String,
+        body_1: String, body_2: String, body_3: String, body_4: String,
+        wings_1: String, wings_2: String, wings_3: String,
+        wings_4: String, wings_5: String, wings_6: String,
     }
 
     public struct Mecha has key, store {
@@ -29,9 +31,11 @@ module mecha::mecha {
         image: Image,
     }
 
+    /* Capability used once at publish time */
     public struct MECHA has drop {}
 
-    fun init(witness: MECHA, ctx: &mut TxContext) {
+    /* ─────────── Package-init (runs once on publish) ────────────────────── */
+    fun init(witness: MECHA, ctx: &mut tx_context::TxContext) {
         let keys = vector[
             utf8(b"name"),
             utf8(b"image_url"),
@@ -51,87 +55,74 @@ module mecha::mecha {
         let publisher = package::claim(witness, ctx);
         let mut disp = new_with_fields<Mecha>(&publisher, keys, values, ctx);
         update_version(&mut disp);
+
+        /* Return capability + Display to the deployer */
         transfer::public_transfer(publisher, tx_context::sender(ctx));
         transfer::public_transfer(disp, tx_context::sender(ctx));
     }
 
-    #[allow(lint(self_transfer))]
+    /* ─────────── Minting ────────────────────────────────────────────────── */
     public fun mint(
         name: String,
         level: u8,
         color: String,
-        helmet: &Trait,
-        helmet_extra: &Trait,
-        stomach: &Trait,
-        stomach_extra: &Trait,
-        body1: &Trait,
-        body2: &Trait,
-        body3: &Trait,
-        body4: &Trait,
-        wings1: &Trait,
-        wings2: &Trait,
-        wings3: &Trait,
-        wings4: &Trait,
-        wings5: &Trait,
-        wings6: &Trait,
-        ctx: &mut TxContext,
+        helmet: &Helmet,
+        stomach: &Stomach,
+        body: &Body,
+        wings: &Wings,
+        ctx: &mut tx_context::TxContext,
     ) {
+        let (h0, h1)                 = get_helmet_parts(helmet);
+        let (s0, s1)                 = get_stomach_parts(stomach);
+        let (b0, b1, b2, b3)         = get_body_parts(body);
+        let (w0, w1, w2, w3, w4, w5) = get_wings_parts(wings);
+
         let img = Image {
-            helmet_1: *get_data(helmet),
-            helmet_2: *get_data(helmet_extra),
-            stomach_1: *get_data(stomach),
-            stomach_2: *get_data(stomach_extra),
-            body_1: *get_data(body1),
-            body_2: *get_data(body2),
-            body_3: *get_data(body3),
-            body_4: *get_data(body4),
-            wings_1: *get_data(wings1),
-            wings_2: *get_data(wings2),
-            wings_3: *get_data(wings3),
-            wings_4: *get_data(wings4),
-            wings_5: *get_data(wings5),
-            wings_6: *get_data(wings6),
+            helmet_1: h0,  helmet_2: h1,
+            stomach_1: s0, stomach_2: s1,
+            body_1: b0, body_2: b1, body_3: b2, body_4: b3,
+            wings_1: w0, wings_2: w1, wings_3: w2,
+            wings_4: w3, wings_5: w4, wings_6: w5,
         };
 
         let nft = Mecha {
-            id: sui::object::new(ctx),
-            name,
-            level,
-            color,
+            id: new(ctx),
+            name, level, color,
             image: img,
         };
 
         transfer::transfer(nft, tx_context::sender(ctx));
     }
 
-    const E_INVALID_PART: u64 = 100;
-
-    /// Dynamic
-    public fun replace_part(
-        mecha: &mut Mecha,
-        part: u8,
-        new_data: &vector<String>,
-    ) {
-        if (part == 0) {
-            mecha.image.helmet_1 = *vector::borrow(new_data, 0);
-            mecha.image.helmet_2 = *vector::borrow(new_data, 1);
-        } else if (part == 1) {
-            mecha.image.stomach_1 = *vector::borrow(new_data, 0);
-            mecha.image.stomach_2 = *vector::borrow(new_data, 1);
-        } else if (part == 2) {
-            mecha.image.body_1 = *vector::borrow(new_data, 0);
-            mecha.image.body_2 = *vector::borrow(new_data, 1);
-            mecha.image.body_3 = *vector::borrow(new_data, 2);
-            mecha.image.body_4 = *vector::borrow(new_data, 3);
-        } else if (part == 3) {
-            mecha.image.wings_1 = *vector::borrow(new_data, 0);
-            mecha.image.wings_2 = *vector::borrow(new_data, 1);
-            mecha.image.wings_3 = *vector::borrow(new_data, 2);
-            mecha.image.wings_4 = *vector::borrow(new_data, 3);
-            mecha.image.wings_5 = *vector::borrow(new_data, 4);
-            mecha.image.wings_6 = *vector::borrow(new_data, 5);
-        } else {
-            abort E_INVALID_PART;
-        }
+    /* ─────────── Trait-swap helpers (objects passed in by ref) ──────────── */
+    public fun replace_helmet(mecha: &mut Mecha, helmet: &Helmet) {
+        let (p0, p1) = get_helmet_parts(helmet);
+        mecha.image.helmet_1 = p0;
+        mecha.image.helmet_2 = p1;
     }
+
+    public fun replace_stomach(mecha: &mut Mecha, stomach: &Stomach) {
+        let (p0, p1) = get_stomach_parts(stomach);
+        mecha.image.stomach_1 = p0;
+        mecha.image.stomach_2 = p1;
+    }
+
+    public fun replace_body(mecha: &mut Mecha, body: &Body) {
+        let (p0, p1, p2, p3) = get_body_parts(body);
+        mecha.image.body_1 = p0;
+        mecha.image.body_2 = p1;
+        mecha.image.body_3 = p2;
+        mecha.image.body_4 = p3;
+    }
+
+    public fun replace_wings(mecha: &mut Mecha, wings: &Wings) {
+        let (p0, p1, p2, p3, p4, p5) = get_wings_parts(wings);
+        mecha.image.wings_1 = p0;
+        mecha.image.wings_2 = p1;
+        mecha.image.wings_3 = p2;
+        mecha.image.wings_4 = p3;
+        mecha.image.wings_5 = p4;
+        mecha.image.wings_6 = p5;
+    }
+
 }
