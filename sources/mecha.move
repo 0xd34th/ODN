@@ -34,7 +34,7 @@ module mecha::mecha {
     /* Capability used once at publish time */
     public struct MECHA has drop {}
 
-    /* ─────────── Package-init (runs once on publish) ────────────────────── */
+    /* ─────────── Package-init ────────────────────── */
     fun init(witness: MECHA, ctx: &mut tx_context::TxContext) {
         let keys = vector[
             utf8(b"name"),
