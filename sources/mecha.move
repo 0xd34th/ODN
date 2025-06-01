@@ -3,10 +3,8 @@ module mecha::mecha {
     use std::string::{String, utf8};
     use std::vector;
 
-    use sui::object::{UID, new};                      // UID type + new()
+    use sui::object::{UID, new};                      
     use sui::display::{new_with_fields, update_version};
-    use sui::transfer;
-    use sui::tx_context;
     use sui::package;
 
     use mecha::traits::{
