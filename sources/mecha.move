@@ -94,7 +94,7 @@ module mecha::mecha {
         transfer::transfer(nft, tx_context::sender(ctx));
     }
 
-    /* ─────────── Trait-swap helpers (objects passed in by ref) ──────────── */
+    /* ─────────── Trait-swap helpers ──────────── */
     public fun replace_helmet(mecha: &mut Mecha, helmet: &Helmet) {
         let (p0, p1) = get_helmet_parts(helmet);
         mecha.image.helmet_1 = p0;
